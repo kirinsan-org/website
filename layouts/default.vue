@@ -24,7 +24,7 @@ function toggleTheme() {
     <header class="site-header">
       <nav class="container site-nav">
         <NuxtLink to="/" class="brand">
-          <span class="brand-icon" aria-hidden="true">🦒</span>
+          <BrandMark class="brand-icon" />
           <span>きりんさん</span>
           <span class="brand-org mono">kirinsan.org</span>
         </NuxtLink>
@@ -97,8 +97,7 @@ function toggleTheme() {
 }
 
 .brand-icon {
-  font-size: 1.2em;
-  line-height: 1;
+  color: var(--yellow);
 }
 
 .brand-org {
@@ -168,9 +167,19 @@ main {
 }
 
 .site-footer {
+  position: relative;
   border-top: 1px solid var(--line);
   padding: 4rem 0 5rem;
   background: var(--bg-elevated);
+}
+
+.site-footer::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 8px;
+  background: url('/img/giraffe-pattern.svg') 50% 0 / 160px 160px repeat;
+  opacity: 0.9;
 }
 
 .footer-inner {

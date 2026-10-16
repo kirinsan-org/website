@@ -11,20 +11,51 @@ const whyOpenSource = [
 const figs = [
   {
     no: 'FIG.01',
+    stat: '40cm',
     title: '舌の長さ、40cm。',
     body: '長いのは首だけだと思っていたなら、認識を改めてほしい。きりんの舌は40cmある。40cm!!!! 40cm!!!! 40cm!!!!',
   },
   {
     no: 'FIG.02',
+    stat: 'ウンボァ！',
     title: '鳴き声は「うんゔぉぁ」。',
     body: '首、長いくせに。実はウシの仲間なので、鳴く。現地(サバンナ)での正確な発音は「ウンボァ！」とされる。',
   },
   {
     no: 'FIG.03',
+    stat: '奇驚網',
     title: 'ワンダーネット搭載。',
     body: '首が長いから血圧が高い。それでも頭まで血流をちゃんとながせるのは、首の毛細血管網「ワンダーネット(奇驚網)」のおかげである。',
   },
 ]
+
+const XRAY_TEXT = '© JASRAC 045-0017-2 · ALL RIGHTS RESERVED · ¥ · 無断使用禁止 · '.repeat(4)
+
+/** Apple-style copy that lights up phrase by phrase as you scroll */
+const MANIFESTO: { text: string; accent?: boolean; br?: boolean }[] = [
+  { text: 'このままで、' },
+  { text: '良いのだろうか？', br: true },
+  { text: '私たちは、' },
+  { text: '真剣に考えました。', br: true },
+  { text: 'オープンソースの童謡が、', accent: true },
+  { text: 'これからの社会には', accent: true },
+  { text: '必須だと。', accent: true },
+]
+const MANIFESTO_STEP = 0.7 / MANIFESTO.length
+
+/** closing "install" session */
+const TERMINAL = [
+  { t: 'cmd', v: 'git clone https://github.com/kirinsan-org/kirinsan-score.git' },
+  { t: 'out', v: "Cloning into 'kirinsan-score'..." },
+  { t: 'out', v: 'remote: Enumerating objects: 4 locales, 1 song, 0 royalties.' },
+  { t: 'out', v: 'Receiving objects: 100% (40/40), 40cm | 40cm/s, done.' },
+  { t: 'cmd', v: 'head -n1 kirinsan-score/LICENSE' },
+  { t: 'ok', v: 'MIT License' },
+  { t: 'cmd', v: 'kirinsan --sing' },
+  { t: 'out', v: '♪ きりんさん　きりんさん　クビが長いのね' },
+]
+
+const permissions = ['商用利用', '改変', '配布', '私的利用', '街中での放歌']
 
 /** easeOutBack — overshoots slightly then settles; the ニュッ in question */
 function backOut(x: number) {
@@ -101,36 +132,37 @@ async function copyCmd() {
         </div>
       </div>
 
-      <!-- pinned: elephant turns into a skeleton as you scroll -->
-      <PinScene :screens="3" v-slot="{ p, seg }">
+      <!-- pinned: an x-ray scan reveals the elephant is made of copyright notices -->
+      <PinScene :screens="3.5" v-slot="{ p, seg }">
         <div class="pin-stack">
-          <div class="elephant-stage">
-            <img
-              src="/img/elephant_silhouette.png"
-              alt="ぞうのシルエット"
-              class="scene-img scene-img-plain pin-abs"
-              :style="{ opacity: 1 - seg(p, 0.35, 0.52) }"
-            />
-            <img
-              src="/img/elephant_skeleton.png"
-              alt="ぞうの骨格"
-              class="scene-img pin-abs"
-              :style="{ opacity: seg(p, 0.35, 0.52) }"
-            />
+          <div
+            class="xray-stage"
+            role="img"
+            aria-label="ぞうのシルエット。スキャンすると、中身は著作権表示でできている"
+            :style="{ '--scan': `${seg(p, 0.3, 0.62) * 100}%` }"
+          >
+            <div class="elephant-solid" />
+            <div class="elephant-xray" aria-hidden="true">
+              <p v-for="n in 34" :key="n" class="xray-row mono">{{ XRAY_TEXT }}</p>
+            </div>
+            <div class="scan-line" :style="{ opacity: seg(p, 0.27, 0.31) - seg(p, 0.62, 0.68) }" />
           </div>
           <div class="elephant-captions">
             <p
               class="scene-text pin-abs-caption"
-              :style="{ opacity: seg(p, 0.02, 0.14) - seg(p, 0.38, 0.5) }"
+              :style="{ opacity: seg(p, 0.02, 0.12) - seg(p, 0.26, 0.34) }"
             >
               親子に親しまれている童謡の実態は、
             </p>
-            <div
-              class="pin-abs-caption"
-              :style="{ opacity: seg(p, 0.52, 0.66) }"
+            <p
+              class="mono pin-abs-caption scan-status"
+              :style="{ opacity: seg(p, 0.3, 0.34) - seg(p, 0.6, 0.64) }"
             >
+              SCANNING「ぞうさん」… {{ Math.round(seg(p, 0.3, 0.62) * 100) }}%
+            </p>
+            <div class="pin-abs-caption" :style="{ opacity: seg(p, 0.64, 0.74) }">
               <p class="scene-text">管理楽曲なのです。</p>
-              <p class="scene-sub mono" :style="{ opacity: seg(p, 0.66, 0.8) }">
+              <p class="scene-sub mono" :style="{ opacity: seg(p, 0.74, 0.84) }">
                 「ぞうさん」 JASRAC No. 045-0017-2
               </p>
             </div>
@@ -141,6 +173,12 @@ async function copyCmd() {
       <!-- pinned: 利用制限 → 著作使用料¥ の畳みかけ -->
       <PinScene :screens="3" class="pin-dark" v-slot="{ p, seg }">
         <div class="pin-stack fee-stack">
+          <span
+            class="fee-yen-bg mono"
+            aria-hidden="true"
+            :style="{ opacity: seg(p, 0.5, 0.66) * 0.1, transform: `scale(${0.8 + seg(p, 0.5, 0.8) * 0.25})` }"
+            >¥</span
+          >
           <div
             class="fee-premise"
             :style="{
@@ -163,25 +201,26 @@ async function copyCmd() {
               transform: `scale(${1.25 - Math.min(seg(p, 0.48, 0.64), 1) * 0.25})`,
             }"
           >
-            如何なる使用にも<br /><span class="yen">著作使用料¥</span>が発生。
+            如何なる使用にも<br /><span class="yen">著作使用料</span>が発生。
           </p>
         </div>
       </PinScene>
 
-      <div class="scene">
-        <Reveal :once="false" :amount="0.6">
-          <p class="scene-text-giant">このままで、良いのだろうか？</p>
-        </Reveal>
-      </div>
-
-      <div class="scene">
-        <Reveal :once="false" :amount="0.6">
-          <p class="scene-text">私たちは、真剣に考えました。</p>
-          <p class="scene-text-giant accent-text" style="margin-top: 0.6em">
-            オープンソースの童謡が、<br />これからの社会には必須。
+      <!-- pinned: the manifesto lights up phrase by phrase -->
+      <PinScene :screens="2.6" v-slot="{ p, seg }">
+        <div class="container manifesto">
+          <p class="manifesto-copy">
+            <template v-for="(s, i) in MANIFESTO" :key="i">
+              <span
+                class="mf-seg"
+                :class="{ 'accent-text': s.accent }"
+                :style="{ opacity: 0.14 + 0.86 * seg(p, 0.06 + i * MANIFESTO_STEP, 0.06 + (i + 1) * MANIFESTO_STEP) }"
+                >{{ s.text }}</span
+              ><br v-if="s.br" />
+            </template>
           </p>
-        </Reveal>
-      </div>
+        </div>
+      </PinScene>
 
       <!-- why open source -->
       <div class="scene scene-list">
@@ -201,16 +240,12 @@ async function copyCmd() {
         </div>
       </div>
 
-      <div class="scene">
-        <Reveal :once="false" :amount="0.6">
-          <p class="scene-text">我々は、作りました。</p>
-          <p class="scene-sub">— では、何を歌う歌にしようか？</p>
-        </Reveal>
-      </div>
-
       <!-- pinned: 象は、だめだ。→(でが割り込む)→ 象では、だめなんだ。 -->
       <PinScene :screens="3" v-slot="{ p, seg }">
         <div class="pin-stack">
+          <p class="dame-kicker">
+            我々は、作りました。<br />では、何を歌う歌にしようか？
+          </p>
           <p
             class="scene-text-giant pin-abs-caption dame-line"
             :style="{
@@ -233,19 +268,22 @@ async function copyCmd() {
         </div>
       </PinScene>
 
-      <div class="scene">
-        <Reveal :once="false" :amount="0.6">
-          <p class="scene-text">では、象以上に愛されうる動物とは？</p>
-        </Reveal>
-      </div>
-
       <!-- kirin reveal: the neck extends from below, faster than you scroll -->
-      <PinScene :screens="3" v-slot="{ p, seg }">
+      <PinScene :screens="3.5" v-slot="{ p, seg }">
         <div class="kirin-scene">
+          <p
+            class="scene-text kirin-question"
+            :style="{
+              opacity: 1 - seg(p, 0.14, 0.24),
+              transform: `translateY(${-seg(p, 0.14, 0.24) * 40}px)`,
+            }"
+          >
+            では、象以上に愛されうる動物とは？
+          </p>
           <div
             class="giraffe"
             aria-hidden="true"
-            :style="{ '--neck-h': `${backOut(seg(p, 0.08, 0.5)) * 58}svh` }"
+            :style="{ '--neck-h': `${backOut(seg(p, 0.18, 0.55)) * 58}svh` }"
           >
             <!-- head rides on top of the stretching neck -->
             <svg viewBox="0 0 200 142" class="g-head">
@@ -264,12 +302,8 @@ async function copyCmd() {
               <ellipse cx="92" cy="106" rx="3" ry="4.5" fill="#7A4D1C" transform="rotate(-15 92 106)" />
               <ellipse cx="108" cy="106" rx="3" ry="4.5" fill="#7A4D1C" transform="rotate(15 108 106)" />
               <!-- eyes -->
-              <circle cx="82" cy="73" r="5" fill="#2B1C0A" />
-              <circle cx="118" cy="73" r="5" fill="#2B1C0A" />
-              <circle cx="83.6" cy="71.4" r="1.6" fill="#fff" />
-              <circle cx="119.6" cy="71.4" r="1.6" fill="#fff" />
-              <!-- smile -->
-              <path d="M94 118 q6 5 12 0" stroke="#7A4D1C" stroke-width="2" fill="none" stroke-linecap="round" />
+              <circle cx="82" cy="73" r="4.5" fill="#2B1C0A" />
+              <circle cx="118" cy="73" r="4.5" fill="#2B1C0A" />
             </svg>
             <!-- the neck itself grows; patches tile instead of stretching -->
             <div class="g-neck"></div>
@@ -277,8 +311,8 @@ async function copyCmd() {
           <div
             class="kirin-caption"
             :style="{
-              opacity: seg(p, 0.55, 0.7),
-              transform: `translateX(${(1 - seg(p, 0.55, 0.7)) * -28}px)`,
+              opacity: seg(p, 0.6, 0.72),
+              transform: `translateX(${(1 - seg(p, 0.6, 0.72)) * -28}px)`,
             }"
           >
             <p class="kirin-ruby">きりん</p>
@@ -305,6 +339,7 @@ async function copyCmd() {
           <Reveal v-for="(f, i) in figs" :key="f.no" :delay="i * 0.12">
             <article class="fig-card">
               <p class="fig-label">{{ f.no }}</p>
+              <p class="fig-stat accent-text">{{ f.stat }}</p>
               <h3 class="fig-title">{{ f.title }}</h3>
               <p class="fig-body">{{ f.body }}</p>
             </article>
@@ -317,7 +352,7 @@ async function copyCmd() {
     <section class="page-section demo">
       <div class="container demo-inner">
         <Reveal>
-          <img src="/img/keyvisual.webp" alt="きりんさん キービジュアル" class="demo-kv" />
+          <LyricPreview />
         </Reveal>
         <div>
           <Reveal>
@@ -338,12 +373,42 @@ async function copyCmd() {
         <Reveal>
           <p class="scene-text">楽曲は、もちろんオープンソースです。</p>
           <p class="scene-sub" style="margin-bottom: 2.5em">OSSは、ライセンスが命。</p>
-          <p class="mit-mark mono">(MIT)</p>
-          <p style="max-width: 36em; margin: 1.5em auto 2em; color: var(--fg-muted)">
-            もっとも先進的かつオープンなライセンス、MIT Licenseを採用致しました。
-            著作使用料の発生もなく、改変も自由。実は当たり前ではなかった自由が、この曲にはあります。
-          </p>
-          <NuxtLink to="/license" class="btn btn-ghost">ライセンス全文を読む</NuxtLink>
+        </Reveal>
+        <Reveal :delay="0.1">
+          <div class="lic-card">
+            <div class="lic-head">
+              <p class="fig-label">License</p>
+              <h3 class="lic-title">MIT License</h3>
+              <p class="lic-desc">
+                もっとも先進的かつオープンなライセンスを、童謡に。著作権表示とライセンス表示さえ残せば、あとは何をしても自由です。
+              </p>
+            </div>
+            <div class="lic-cols">
+              <div>
+                <p class="lic-col-title">Permissions</p>
+                <ul class="lic-list">
+                  <li v-for="perm in permissions" :key="perm"><span class="lic-ok">✓</span>{{ perm }}</li>
+                </ul>
+              </div>
+              <div>
+                <p class="lic-col-title">Limitations</p>
+                <ul class="lic-list">
+                  <li><span class="lic-ng">✕</span>責任</li>
+                  <li><span class="lic-ng">✕</span>保証</li>
+                </ul>
+                <p class="lic-note">1000枚プレスして爆死しても、誰も責任を負いません。</p>
+              </div>
+              <div>
+                <p class="lic-col-title">Conditions</p>
+                <ul class="lic-list">
+                  <li><span class="lic-info">ⓘ</span>著作権表示とライセンス表示</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+        <Reveal :delay="0.2">
+          <NuxtLink to="/license" class="btn btn-ghost" style="margin-top: 2.5rem">ライセンス全文を読む</NuxtLink>
         </Reveal>
       </div>
     </section>
@@ -372,21 +437,34 @@ async function copyCmd() {
 
     <!-- ============ GET KIRINSAN ============ -->
     <section class="page-section get-sec">
-      <div class="container" style="text-align: center">
+      <div class="container get-inner">
         <Reveal>
           <p class="fig-label">Get Kirinsan</p>
-          <h2 class="section-title" style="margin: 0.4em 0 1.2em">
-            未来を見据えて、誰しもが楽しめる楽曲を。
+          <h2 class="section-title" style="margin: 0.4em 0 0.6em">
+            未来を見据えて、<br />誰しもが楽しめる<span style="white-space: nowrap">楽曲を。</span>
           </h2>
-          <button class="codeblock hero-clone" type="button" @click="copyCmd">
-            <span class="prompt">$ </span><span class="cmd">{{ CLONE_CMD }}</span>
-            <span class="copy-state mono">{{ copied ? ' ✓ copied' : '' }}</span>
-          </button>
-          <div class="hero-ctas" style="justify-content: center; margin-top: 2em">
+          <p style="color: var(--fg-muted); margin-bottom: 2em; max-width: 30em">
+            インストールは不要です。クローンして、歌ってください。フォークも歓迎します。
+          </p>
+          <div class="hero-ctas" style="justify-content: flex-start">
             <NuxtLink to="/song" class="btn btn-primary">歌詞と楽譜</NuxtLink>
             <a href="https://github.com/kirinsan-org" target="_blank" rel="noopener" class="btn btn-ghost">
               kirinsan-org on GitHub ↗
             </a>
+          </div>
+        </Reveal>
+        <Reveal :delay="0.15">
+          <div class="term" aria-label="ターミナルの実行例">
+            <div class="term-bar">
+              <span /><span /><span />
+              <span class="mono term-title">kirinsan — zsh</span>
+            </div>
+            <div class="term-body mono">
+              <p v-for="(l, i) in TERMINAL" :key="i" class="term-line" :class="'term-' + l.t">
+                <span v-if="l.t === 'cmd'" class="term-prompt">$ </span>{{ l.v }}
+              </p>
+              <p class="term-line"><span class="term-prompt">$ </span><span class="term-cursor" /></p>
+            </div>
           </div>
         </Reveal>
       </div>
@@ -401,13 +479,31 @@ async function copyCmd() {
   display: grid;
   place-items: center;
   position: relative;
+  overflow: hidden;
   background:
     radial-gradient(ellipse 60% 45% at 50% 118%, rgba(247, 148, 29, 0.22), transparent),
     radial-gradient(ellipse 45% 32% at 50% 108%, rgba(255, 196, 0, 0.16), transparent),
     var(--bg);
 }
 
+/* a whisper of giraffe hide behind the glow */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/img/giraffe-pattern.svg') 50% 100% / 240px 240px repeat;
+  opacity: 0.07;
+  mask-image: radial-gradient(ellipse 70% 55% at 50% 110%, #000, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 110%, #000, transparent 70%);
+  pointer-events: none;
+}
+
+[data-theme='light'] .hero::before {
+  opacity: 0.16;
+}
+
 .hero-inner {
+  position: relative;
   text-align: center;
   display: grid;
   gap: 1.4rem;
@@ -418,7 +514,11 @@ async function copyCmd() {
   font-size: var(--text-hero);
   font-weight: 900;
   line-height: 1.05;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.01em;
+  background: linear-gradient(180deg, var(--fg) 55%, color-mix(in srgb, var(--fg) 62%, var(--orange)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .hero-tagline {
@@ -490,30 +590,6 @@ async function copyCmd() {
   background: #000;
 }
 
-.scene-img {
-  width: clamp(180px, 30vw, 340px);
-  margin: 0 auto 2rem;
-  filter: invert(1);
-  mix-blend-mode: screen; /* melt the baked-in background into the dark page */
-  opacity: 0.92;
-}
-
-.scene-img-plain {
-  filter: none;
-  mix-blend-mode: normal;
-}
-
-/* light mode: keep the drawings dark-on-paper */
-[data-theme='light'] .scene-img {
-  filter: none;
-  mix-blend-mode: multiply;
-}
-
-[data-theme='light'] .scene-img-plain {
-  filter: brightness(0.16);
-  mix-blend-mode: normal;
-}
-
 /* ---------- pinned scenes ---------- */
 .pin-stack {
   position: relative;
@@ -525,17 +601,92 @@ async function copyCmd() {
   gap: 2rem;
 }
 
-.elephant-stage {
+/* elephant x-ray: right of the scan line is the silhouette, left is what it's made of */
+.xray-stage {
   position: relative;
-  width: clamp(180px, 30vw, 340px);
-  aspect-ratio: 445 / 368;
+  width: clamp(260px, 42vw, 520px);
+  aspect-ratio: 1780 / 1472;
 }
 
-.elephant-stage .pin-abs {
+.elephant-solid,
+.elephant-xray {
   position: absolute;
   inset: 0;
-  width: 100%;
-  margin: 0;
+  mask: url('/img/elephant.svg') center / contain no-repeat;
+  -webkit-mask: url('/img/elephant.svg') center / contain no-repeat;
+}
+
+.elephant-solid {
+  background: var(--fg);
+  clip-path: inset(0 0 0 var(--scan));
+}
+
+.elephant-xray {
+  background: #160707;
+  clip-path: inset(0 calc(100% - var(--scan)) 0 0);
+  overflow: hidden;
+  display: grid;
+  align-content: center;
+}
+
+.xray-row {
+  font-size: clamp(7px, 0.85vw, 11px);
+  line-height: 1.3;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  color: #ff4a3d;
+}
+
+.xray-row:nth-child(even) {
+  transform: translateX(-4.5em);
+  color: #ffb13d;
+}
+
+.scan-line {
+  position: absolute;
+  top: -8%;
+  bottom: -8%;
+  left: var(--scan);
+  width: 2px;
+  translate: -1px 0;
+  background: #ff4a3d;
+  box-shadow:
+    0 0 12px 2px rgba(255, 74, 61, 0.7),
+    0 0 60px 12px rgba(255, 74, 61, 0.25);
+}
+
+.scan-status {
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  color: #ff4a3d;
+}
+
+/* manifesto — Apple-style phrase-by-phrase light-up */
+.manifesto {
+  text-align: left;
+}
+
+.manifesto-copy {
+  font-size: clamp(2rem, 5.6vw, 4.4rem);
+  font-weight: 900;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+
+.mf-seg {
+  display: inline-block; /* wrap by phrase, never mid-phrase */
+  will-change: opacity;
+}
+
+.dame-kicker {
+  position: absolute;
+  top: 18svh;
+  left: 0;
+  right: 0;
+  color: var(--fg-muted);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  line-height: 1.7;
 }
 
 .elephant-captions {
@@ -586,6 +737,19 @@ async function copyCmd() {
 
 .fee-punch .yen {
   text-shadow: 0 0 40px rgba(224, 27, 36, 0.45);
+}
+
+.fee-yen-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -54%;
+  font-size: clamp(16rem, 70svh, 40rem);
+  font-weight: 500;
+  line-height: 1;
+  color: #e01b24;
+  pointer-events: none;
+  will-change: opacity, transform;
 }
 
 .dame-line {
@@ -667,11 +831,12 @@ async function copyCmd() {
 }
 
 .giraffe {
+  --gw: clamp(150px, 22vw, 250px);
   position: absolute;
   bottom: 0;
   left: 70%;
   transform: translateX(-50%);
-  width: clamp(150px, 22vw, 250px);
+  width: var(--gw);
   pointer-events: none;
 }
 
@@ -682,21 +847,28 @@ async function copyCmd() {
   transform: translateX(-50%);
   width: 42%;
   height: var(--neck-h);
-  background-color: #edb53e;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 150'%3E%3Cellipse cx='32' cy='35' rx='15' ry='19' fill='%23A9691F' transform='rotate(12 32 35)'/%3E%3Cellipse cx='72' cy='105' rx='12' ry='16' fill='%23A9691F' transform='rotate(-14 72 105)'/%3E%3C/svg%3E");
-  background-size: 100% auto;
-  background-position: 50% 100%;
-  background-repeat: repeat-y;
+  background: #edb53e url('/img/giraffe-pattern.svg') 50% 100% / 160px 160px repeat;
   border-radius: 60px 60px 0 0;
   will-change: height;
 }
 
 .g-head {
   position: absolute;
-  bottom: calc(var(--neck-h) - 8px);
+  z-index: 1;
+  bottom: calc(var(--neck-h) - var(--gw) * 0.14); /* chin overlaps the neck top */
   left: 0;
   width: 100%;
   will-change: bottom;
+}
+
+.kirin-question {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  translate: 0 -50%;
+  padding: 0 5vw;
+  will-change: opacity, transform;
 }
 
 .kirin-caption {
@@ -739,7 +911,7 @@ async function copyCmd() {
   }
 
   .g-head {
-    bottom: calc(58svh - 8px) !important;
+    bottom: calc(58svh - var(--gw) * 0.14) !important;
   }
 }
 
@@ -769,10 +941,18 @@ async function copyCmd() {
   transform: translateY(-3px);
 }
 
-.fig-title {
-  font-size: 1.3rem;
+.fig-stat {
+  font-size: clamp(2.4rem, 4.2vw, 3.6rem);
   font-weight: 900;
-  margin: 0.5em 0 0.6em;
+  line-height: 1.1;
+  margin: 0.45em 0 0.5em;
+  letter-spacing: -0.01em;
+}
+
+.fig-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  margin: 0 0 0.6em;
 }
 
 .fig-body {
@@ -809,11 +989,176 @@ async function copyCmd() {
   border-top: 1px solid var(--line);
 }
 
-/* ---------- license ---------- */
-.mit-mark {
-  font-size: clamp(3rem, 9vw, 6rem);
+/* ---------- closing terminal ---------- */
+.get-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+}
+
+.term {
+  background: #0d0c0a;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  --fg: #e8e3d6;
+  --fg-muted: #8c8676;
+  color: var(--fg);
+}
+
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.term-bar > span:not(.term-title) {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #3a3630;
+}
+
+.term-title {
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+}
+
+.term-body {
+  padding: 1.1rem 1.2rem 1.2rem;
+  font-size: 0.8rem;
+  line-height: 1.85;
+}
+
+.term-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.term-cmd {
+  white-space: pre-wrap; /* commands must stay copyable in full */
+  word-break: break-all;
+}
+
+.term-prompt {
+  color: var(--yellow);
+}
+
+.term-out {
+  color: var(--fg-muted);
+}
+
+.term-ok {
   color: var(--yellow);
   font-weight: 500;
-  line-height: 1;
+}
+
+.term-cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  vertical-align: -0.2em;
+  background: var(--fg);
+  animation: blink 1.1s steps(2) infinite;
+}
+
+@keyframes blink {
+  to {
+    opacity: 0;
+  }
+}
+
+/* ---------- license card (GitHub-sidebar style) ---------- */
+.lic-card {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: left;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.lic-head {
+  padding: 1.8rem 2rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.lic-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  margin: 0.25em 0 0.4em;
+}
+
+.lic-desc {
+  color: var(--fg-muted);
+  font-size: 0.92rem;
+}
+
+/* 1px gaps over a line-colored background draw the dividers */
+.lic-cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px;
+  background: var(--line);
+}
+
+.lic-cols > div {
+  padding: 1.4rem 2rem 1.8rem;
+  background: var(--bg-elevated);
+}
+
+@media (min-width: 820px) {
+  .lic-cols {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.lic-col-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-bottom: 0.8em;
+}
+
+.lic-list {
+  list-style: none;
+  display: grid;
+  gap: 0.45em;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.lic-list li {
+  display: flex;
+  gap: 0.6em;
+  align-items: baseline;
+}
+
+.lic-ok {
+  color: var(--yellow);
+}
+
+.lic-ng {
+  color: #e5534b;
+}
+
+.lic-info {
+  color: var(--fg-muted);
+}
+
+.lic-note {
+  margin-top: 1em;
+  font-size: 0.78rem;
+  color: var(--fg-muted);
 }
 </style>
